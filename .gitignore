@@ -1,0 +1,10 @@
+# Build and Release Folders
+.idea
+bin-debug/
+bin-release/
+
+/public/uploads/*
+!/public/uploads/index.html
+
+admin/package-lock.json
+/server/dist/
