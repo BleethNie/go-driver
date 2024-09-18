@@ -28,6 +28,9 @@ var (
 	GatewayPathUnavailable Exception = 10
 	// GatewayTargetDeviceFailedtoRespond Specialized for Modbus gateways. Sent when slave fails to respond.
 	GatewayTargetDeviceFailedtoRespond Exception = 11
+
+	// GatewayTargetDeviceFailedtoRespond Specialized for Modbus gateways. Sent when slave fails to respond.
+	ServerNetworkCheckError Exception = 20
 )
 
 func (e Exception) Error() string {

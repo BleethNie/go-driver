@@ -25,6 +25,7 @@ type Server struct {
 	Coils            []byte
 	HoldingRegisters []uint16
 	InputRegisters   []uint16
+	IpWhiteList      []string
 }
 
 // Request contains the connection and Modbus frame.
@@ -42,6 +43,7 @@ func NewServer() *Server {
 	s.Coils = make([]byte, 65536)
 	s.HoldingRegisters = make([]uint16, 65536)
 	s.InputRegisters = make([]uint16, 65536)
+	s.IpWhiteList = make([]string, 0)
 
 	// Add default functions.
 	s.function[1] = ReadCoils
@@ -61,6 +63,11 @@ func NewServer() *Server {
 	return s
 }
 
+func (s *Server) SetIpWhiteList(ips []string) *Server {
+	s.IpWhiteList = ips
+	return s
+}
+
 // RegisterFunctionHandler override the default behavior for a given Modbus function.
 func (s *Server) RegisterFunctionHandler(funcCode uint8, function func(*Server, Framer) ([]byte, *Exception)) {
 	s.function[funcCode] = function
@@ -69,7 +76,6 @@ func (s *Server) RegisterFunctionHandler(funcCode uint8, function func(*Server, 
 func (s *Server) handle(request *Request) Framer {
 	var exception *Exception
 	var data []byte
-
 	response := request.frame.Copy()
 
 	function := request.frame.GetFunction()

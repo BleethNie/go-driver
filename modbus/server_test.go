@@ -134,3 +134,15 @@ func TestModbus(t *testing.T) {
 		t.Errorf("expected %v, got %v", expect, got)
 	}
 }
+
+func TestModbusIpWhiteList(t *testing.T) {
+	// Server
+	s := NewServer().SetIpWhiteList([]string{"192.168.1.0/31"})
+	err := s.ListenTCP("0.0.0.0:502")
+	if err != nil {
+		t.Fatalf("failed to listen, got %v\n", err)
+	}
+	for true {
+
+	}
+}

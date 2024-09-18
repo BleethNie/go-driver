@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -18,7 +19,6 @@ func (s *Server) accept(listen net.Listener) error {
 			log.Printf("Unable to accept connections: %#v\n", err)
 			return err
 		}
-
 		go func(conn net.Conn) {
 			defer conn.Close()
 
@@ -41,7 +41,17 @@ func (s *Server) accept(listen net.Listener) error {
 				}
 
 				request := &Request{conn, frame}
-
+				if len(s.IpWhiteList) > 0 {
+					addr := conn.RemoteAddr().String()
+					ip := strings.Split(addr, ":")[0]
+					if !IsInIpList(ip, s.IpWhiteList) {
+						frame := request.frame.Copy()
+						frame.SetException(&ServerNetworkCheckError)
+						conn.Write(frame.Bytes())
+						conn.Close()
+						return
+					}
+				}
 				s.requestChan <- request
 			}
 		}(conn)
@@ -70,4 +80,36 @@ func (s *Server) ListenTLS(addressPort string, config *tls.Config) (err error) {
 	s.listeners = append(s.listeners, listen)
 	go s.accept(listen)
 	return err
+}
+
+func IsInIpList(ip string, ipList []string) bool {
+	if ip == "127.0.0.1" || ip == "localhost" {
+		return true
+	}
+	//解析单个IP
+	ipAddr := net.ParseIP(ip)
+	if ipAddr == nil {
+		return false // IP地址无效
+	}
+	// 遍历IP列表
+	for _, ipRange := range ipList {
+		// 分割IP和掩码长度
+		parts := strings.Split(ipRange, "/")
+
+		// 检查是否是有效的CIDR表示法
+		if len(parts) != 2 {
+			if ip == parts[0] {
+				return true
+			}
+			continue
+		}
+		// 解析IP地址部分
+		intValue, _ := strconv.ParseInt(parts[1], 0, 32)
+		ipNet := net.IPNet{IP: net.ParseIP(parts[0]), Mask: net.CIDRMask(int(intValue), 32)}
+		// 检查IP是否在当前的IPNet范围内
+		if ipNet.Contains(ipAddr) {
+			return true
+		}
+	}
+	return false
 }
