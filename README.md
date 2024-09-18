@@ -1,25 +1,35 @@
 
 
-串口
-https://github.com/tarm/serial
-https://github.com/jacobsa/go-serial.git
+## 串口
 
+- https://github.com/tarm/serial
+- https://github.com/jacobsa/go-serial.git
+- https://github.com/pkg/term
 
-https://github.com/pkg/term
-
-
+```
 $ go get github.com/gotmc/libusb/v2
+```
 
 
 ## 常用的嵌入式硬件通信接口协议
+
+
 - UART： 通用异步收发传输器。
+
 - USART： 通用同步/异步串行接收/发送器。USART可以理解为UART和USRT二合一的通信接口，一个是同步通信，一个是异步通信。
+
 - IIC： 集成电路总线，是一种串行通信总线。
+
 - SPI： 串行外设接口，是一种高速的，全双工，同步的通信总线。
+
 - QSPI： 是SPI接口的扩展，比SPI应用更加广泛。QSPI是在SPI协议的基础上，对其增加了队列传输机制，传输过程不需要CPU干预，极大的提高了传输效率。
+
 - RS-232: 全双工点对点式的异步串行通信协议接口。
+
 - RS-485: 串行通信总线，采用两线制，差分传输，半双工模式。
+
 - RS-422: 采用四线制，全双工，差分传输，多点通信的数据传输协议。
+
 - USB： 通用串行总线 。USB是一个外部总线标准，用于规范电脑与外部设备的连接和通讯，是应用在PC领域的接口技术。
 
 - CAN： 控制器局域网络。 CAN 总线是一种应用广泛的现场总线 ，在工业测控和工业自动化等领域有很大的应用前景。
@@ -30,19 +40,31 @@ $ go get github.com/gotmc/libusb/v2
 
 
 ## 物联网协议
-1、MQTT协议
-2、MQTT-SN协议
-3、CoAP协议
-4、LwM2M协议
-5、HTTP协议
-6、LoRaWAN协议
-7、NB-IoT协议
-8、Zigbee
-9、RFID
-10、BLUETOOTH
-11、NFC
-12、4G
-13、LoRa
+- 1、MQTT协议
+
+- 2、MQTT-SN协议
+
+- 3、CoAP协议
+
+- 4、LwM2M协议
+
+- 5、HTTP协议
+
+- 6、LoRaWAN协议
+
+- 7、NB-IoT协议
+
+- 8、Zigbee
+
+- 9、RFID
+
+- 10、BLUETOOTH
+
+- 11、NFC
+
+- 12、4G
+
+- 13、LoRa
 
 
 
@@ -58,3 +80,7 @@ $ go get github.com/gotmc/libusb/v2
 - 104规约：104规约是一种远动通信规约，主要用于调度自动化系统。它提供了一种标准化的通信协议，用于电力系统的调度和控制。104规约通常基于网络通信，如TCP/IP，可以实现实时数据传输和远程控制。
 
 - 61850协议主要用于变电站自动化系统的设计和实施，基于抽象通信服务接口（ACSI）和制造报文规范（MMS）等技术，可以实现不同设备之间的互操作性。
+
+## IEC104功能
+
+
