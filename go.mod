@@ -1,4 +1,4 @@
-module driver
+module github.com/BleethNie/go-driver
 
 go 1.21.2
 

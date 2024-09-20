@@ -47,13 +47,14 @@ func (frame *TCPFrame) Copy() Framer {
 
 // Bytes returns the Modbus byte stream based on the TCPFrame fields
 func (frame *TCPFrame) Bytes() []byte {
-	bytes := make([]byte, 8)
+	bytes := make([]byte, 9)
 
 	binary.BigEndian.PutUint16(bytes[0:2], frame.TransactionIdentifier)
 	binary.BigEndian.PutUint16(bytes[2:4], frame.ProtocolIdentifier)
 	binary.BigEndian.PutUint16(bytes[4:6], uint16(2+len(frame.Data)))
 	bytes[6] = frame.Device
 	bytes[7] = frame.Function
+	bytes[8] = uint8(frame.Length)
 	bytes = append(bytes, frame.Data...)
 
 	return bytes
@@ -84,5 +85,5 @@ func (frame *TCPFrame) SetException(exception *Exception) {
 }
 
 func (frame *TCPFrame) setLength() {
-	frame.Length = uint16(len(frame.Data) + 2)
+	frame.Length = uint16(len(frame.Data))
 }

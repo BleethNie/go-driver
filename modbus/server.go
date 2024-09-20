@@ -4,11 +4,10 @@ package modbus
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/goburrow/serial"
 	"io"
 	"net"
 	"sync"
-
-	"github.com/goburrow/serial"
 )
 
 // Server is a Modbus slave with allocated memory for discrete inputs, coils, etc.
@@ -63,9 +62,9 @@ func NewServer() *Server {
 	return s
 }
 
-func (s *Server) SetIpWhiteList(ips []string) *Server {
+// 默认支持localhost和127.0.0.1
+func (s *Server) SetIpWhiteList(ips []string) {
 	s.IpWhiteList = ips
-	return s
 }
 
 // RegisterFunctionHandler override the default behavior for a given Modbus function.
@@ -82,13 +81,13 @@ func (s *Server) handle(request *Request) Framer {
 	if s.function[function] != nil {
 		data, exception = s.function[function](s, request.frame)
 		response.SetData(data)
-		hexStr := hex.EncodeToString(data)
+		hexStr := hex.EncodeToString(response.Bytes())
 		fmt.Println("获取到的数据为：" + hexStr)
 	} else {
 		exception = &IllegalFunction
 	}
 
-	if exception != &Success {
+	if exception != nil && exception != &Success {
 		response.SetException(exception)
 	}
 	return response
@@ -108,8 +107,8 @@ func (s *Server) Close() {
 	for _, listen := range s.listeners {
 		listen.Close()
 	}
-
-	close(s.portsCloseChan)
+	//发送关闭信号
+	s.portsCloseChan <- struct{}{}
 	s.portsWG.Wait()
 
 	for _, port := range s.ports {

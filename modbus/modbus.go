@@ -38,6 +38,7 @@ const (
 	ExceptionCodeMemoryParityError                  = 8
 	ExceptionCodeGatewayPathUnavailable             = 10
 	ExceptionCodeGatewayTargetDeviceFailedToRespond = 11
+	ExceptionCodeServerNetworkCheckError            = 20
 )
 
 // ModbusError implements error interface.

@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goburrow/modbus"
 	"github.com/goburrow/serial"
 )
 

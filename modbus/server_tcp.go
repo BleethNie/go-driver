@@ -19,10 +19,18 @@ func (s *Server) accept(listen net.Listener) error {
 			log.Printf("Unable to accept connections: %#v\n", err)
 			return err
 		}
+
 		go func(conn net.Conn) {
 			defer conn.Close()
 
 			for {
+				select {
+				case <-s.portsCloseChan:
+					conn.Close()
+					log.Printf("conn.Close()")
+					break
+				default:
+				}
 				packet := make([]byte, 512)
 				bytesRead, err := conn.Read(packet)
 				if err != nil {
