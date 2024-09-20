@@ -1,6 +1,17 @@
+## 当前已经实现功能
+
+### modbus
+- 在该库基础上完善：https://github.com/tbrandon/mbserver
+- 新增ip白名单支持
+- 修复bug
 
 
-## 串口
+
+
+## 待实现功能资料整理参考
+
+
+### 串口
 
 - https://github.com/tarm/serial
 - https://github.com/jacobsa/go-serial.git
@@ -11,7 +22,7 @@ $ go get github.com/gotmc/libusb/v2
 ```
 
 
-## 常用的嵌入式硬件通信接口协议
+### 常用的嵌入式硬件通信接口协议
 
 
 - UART： 通用异步收发传输器。
@@ -39,7 +50,7 @@ $ go get github.com/gotmc/libusb/v2
 
 
 
-## 物联网协议
+### 物联网协议
 - 1、MQTT协议
 
 - 2、MQTT-SN协议
@@ -68,7 +79,7 @@ $ go get github.com/gotmc/libusb/v2
 
 
 
-## 电力系统协议
+### 电力系统协议
 - Modbus是一种常见的通讯协议，被广泛应用于工业自动化系统中，采用一问一答的方式进行通信，报文容易理解且调试过程中便于查找问题。通讯方式使用RS-485或RS-232屏蔽双绞线进行通信，理论上通讯距离可以达到1000多米。
 
 - 101通讯是调度通讯规约，在现场接线有时为四线制，有时为三线制，目前主要应用在地调上，可将数据通过数据网柜传到地调中心。
@@ -81,6 +92,6 @@ $ go get github.com/gotmc/libusb/v2
 
 - 61850协议主要用于变电站自动化系统的设计和实施，基于抽象通信服务接口（ACSI）和制造报文规范（MMS）等技术，可以实现不同设备之间的互操作性。
 
-## IEC104功能
+### IEC104功能
 
 
