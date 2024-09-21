@@ -10,7 +10,7 @@ type TCPFrame struct {
 	TransactionIdentifier uint16
 	ProtocolIdentifier    uint16
 	Length                uint16
-	Device                uint8
+	Unit                  uint8
 	Function              uint8
 	Data                  []byte
 }
@@ -26,7 +26,7 @@ func NewTCPFrame(packet []byte) (*TCPFrame, error) {
 		TransactionIdentifier: binary.BigEndian.Uint16(packet[0:2]),
 		ProtocolIdentifier:    binary.BigEndian.Uint16(packet[2:4]),
 		Length:                binary.BigEndian.Uint16(packet[4:6]),
-		Device:                uint8(packet[6]),
+		Unit:                  uint8(packet[6]),
 		Function:              uint8(packet[7]),
 		Data:                  packet[8:],
 	}
@@ -52,7 +52,7 @@ func (frame *TCPFrame) Bytes() []byte {
 	binary.BigEndian.PutUint16(bytes[0:2], frame.TransactionIdentifier)
 	binary.BigEndian.PutUint16(bytes[2:4], frame.ProtocolIdentifier)
 	binary.BigEndian.PutUint16(bytes[4:6], uint16(2+len(frame.Data)))
-	bytes[6] = frame.Device
+	bytes[6] = frame.Unit
 	bytes[7] = frame.Function
 	bytes[8] = uint8(frame.Length)
 	bytes = append(bytes, frame.Data...)
