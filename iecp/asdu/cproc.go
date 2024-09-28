@@ -387,7 +387,9 @@ func (sf *ASDU) GetSingleCmd() SingleCommandInfo {
 	var s SingleCommandInfo
 
 	s.Ioa = sf.DecodeInfoObjAddr()
-	value := sf.DecodeByte()
+	//系统原始获取value方法
+	//value := sf.DecodeByte()
+	value := sf.GetInfoValue()
 	s.Value = value&0x01 == 0x01
 	s.Qoc = ParseQualifierOfCommand(value & 0xfe)
 
@@ -407,7 +409,9 @@ func (sf *ASDU) GetDoubleCmd() DoubleCommandInfo {
 	var cmd DoubleCommandInfo
 
 	cmd.Ioa = sf.DecodeInfoObjAddr()
-	value := sf.DecodeByte()
+	//系统原始获取value方法
+	//value := sf.DecodeByte()
+	value := sf.GetInfoValue()
 	cmd.Value = DoubleCommand(value & 0x03)
 	cmd.Qoc = ParseQualifierOfCommand(value & 0xfc)
 

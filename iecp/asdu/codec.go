@@ -12,6 +12,10 @@ func (sf *ASDU) AppendBytes(b ...byte) *ASDU {
 	return sf
 }
 
+func (sf *ASDU) GetInfoValue() byte {
+	return sf.infoObj[sf.InfoObjAddrSize]
+}
+
 // CleanInfoObj clean info object
 func (sf *ASDU) CleanInfoObj() *ASDU {
 	sf.infoObj = []byte{}
