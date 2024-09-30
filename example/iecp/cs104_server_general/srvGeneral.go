@@ -38,7 +38,10 @@ func (sf *mysrv) InterrogationHandler(c asdu.Connect, asduPack *asdu.ASDU, qoi a
 	fmt.Println("call InterrogationHandler()")
 
 	///*高路2024-9-17start
-	asduPack.SendReplyMirror(c, asdu.ActivationCon)
+	err := asduPack.SendReplyMirror(c, asdu.ActivationCon)
+	if err != nil {
+		return err
+	}
 
 	objSize, _ := asdu.GetInfoObjSize(asduPack.Type)
 	objSize += asduPack.InfoObjAddrSize
@@ -232,6 +235,8 @@ func (sf *mysrv) ReadHandler(c asdu.Connect, asduPack *asdu.ASDU, addr asdu.Info
 			if err != nil {
 				return err
 			}
+		default:
+			panic("unhandled default case")
 		}
 	} else {
 		var yxid int = 1
@@ -263,6 +268,8 @@ func (sf *mysrv) ReadHandler(c asdu.Connect, asduPack *asdu.ASDU, addr asdu.Info
 				if err != nil {
 					return err
 				}
+			default:
+				panic("unhandled default case")
 			}
 		} else {
 			//双点遥信
@@ -291,6 +298,8 @@ func (sf *mysrv) ReadHandler(c asdu.Connect, asduPack *asdu.ASDU, addr asdu.Info
 				if err != nil {
 					return err
 				}
+			default:
+				panic("unhandled default case")
 			}
 			/////////////////////////////
 		}
@@ -351,6 +360,8 @@ func (sf *mysrv) ASDUHandler(c asdu.Connect, asduPack *asdu.ASDU) error {
 		} else {
 			return asduPack.SendReplyMirror(c, asdu.UnknownCOT)
 		}
+	default:
+		panic("unhandled default case")
 	}
 	return nil
 }
