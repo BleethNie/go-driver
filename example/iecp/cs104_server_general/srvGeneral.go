@@ -36,7 +36,7 @@ func inits() {
 func (sf *mysrv) InterrogationHandler(c asdu.Connect, asduPack *asdu.ASDU, qoi asdu.QualifierOfInterrogation) error {
 	log.Println("qoi:", qoi)
 	fmt.Println("call InterrogationHandler()")
-
+	asduPack.InfoObjTimeZone = time.Local
 	///*高路2024-9-17start
 	err := asduPack.SendReplyMirror(c, asdu.ActivationCon)
 	if err != nil {
@@ -190,7 +190,7 @@ func (sf *mysrv) InterrogationHandler(c asdu.Connect, asduPack *asdu.ASDU, qoi a
 	// }()
 
 	//asduPack.SendICReply(c, asdu.InterrogatedByStation)
-	err := asduPack.SendReplyMirror(c, asdu.ActivationTerm)
+	err = asduPack.SendReplyMirror(c, asdu.ActivationTerm)
 	if err != nil {
 		return err
 	}
@@ -202,6 +202,7 @@ func (sf *mysrv) CounterInterrogationHandler(asdu.Connect, *asdu.ASDU, asdu.Qual
 }
 func (sf *mysrv) ReadHandler(c asdu.Connect, asduPack *asdu.ASDU, addr asdu.InfoObjAddr) error {
 	fmt.Println("call ReadHandler()")
+	asduPack.InfoObjTimeZone = time.Local
 	///*高路2024-9-17start
 	objAddr := asduPack.DecodeInfoObjAddr()
 	/*var t time.Time
@@ -275,14 +276,16 @@ func (sf *mysrv) ReadHandler(c asdu.Connect, asduPack *asdu.ASDU, addr asdu.Info
 			//双点遥信
 			var spi asdu.DoublePointInfo
 			spi.Ioa = objAddr
-			//spi.Time = t
+			spi.Time = time.Now()
 			if YXMap[int(objAddr)] == 1 {
 				spi.Value = asdu.DPIDeterminedOn
 			} else {
 				spi.Value = asdu.DPIDeterminedOff
 			}
 			spi.Qds = 0x00
-			switch asduPack.Type {
+			//配置文件中配置的遥信数据格式
+			yxConfigType := asdu.M_DP_TB_1
+			switch yxConfigType {
 			case asdu.M_DP_NA_1:
 				err := asdu.Double(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.InterrogatedByStation}, asduPack.CommonAddr, spi)
 				if err != nil {
@@ -324,6 +327,7 @@ func (sf *mysrv) DelayAcquisitionHandler(asdu.Connect, *asdu.ASDU, uint16) error
 }
 
 func (sf *mysrv) ASDUHandler(c asdu.Connect, asduPack *asdu.ASDU) error {
+	asduPack.InfoObjTimeZone = time.Local
 	fmt.Println("call ASDUHandler()")
 	switch asduPack.Identifier.Type {
 	case asdu.C_SC_NA_1, asdu.C_SC_TA_1: //单命令遥控
