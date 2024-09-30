@@ -37,70 +37,160 @@ func (sf *mysrv) InterrogationHandler(c asdu.Connect, asduPack *asdu.ASDU, qoi a
 	log.Println("qoi:", qoi)
 	fmt.Println("call InterrogationHandler()")
 
-	var yxNum int = 0
-	var ycNum int = 0
-
-	//总召激活确认
+	///*高路2024-9-17start
 	asduPack.SendReplyMirror(c, asdu.ActivationCon)
 
-	var asduTmp *asdu.ASDU = asdu.NewEmptyASDU(asdu.ParamsWide)
-	var asduYcTmp *asdu.ASDU = asdu.NewEmptyASDU(asdu.ParamsWide)
+	objSize, _ := asdu.GetInfoObjSize(asduPack.Type)
+	objSize += asduPack.InfoObjAddrSize
 
-	//遥信总召
-	asduTmp.Type = asdu.M_SP_NA_1
-	asduTmp.Variable.IsSequence = false
-	infoObjLength, _ := asdu.GetInfoObjSize(asdu.M_SP_NA_1)
-	elementLength := infoObjLength + asdu.ParamsWide.InfoObjAddrSize
-	for k, v := range AppMap["yx"] {
-		asduTmp.AppendInfoObjAddr(asdu.InfoObjAddr(k + 1))
+	var yxid int = 1
+	switch YxType {
+	case 1:
+	case 2:
+		yxid = 2
 
-		asduTmp.AppendBytes(byte(YXMap[v]))
-		yxNum = yxNum + 1
+	}
+	/*var t time.Time
+	switch asduPack.Type {
+	case asdu.M_SP_NA_1:
+	case asdu.M_SP_TA_1:
+		t = asduPack.DecodeCP24Time2a()
+		objSize = objSize + 3
+	case asdu.M_SP_TB_1:
+		t = asduPack.DecodeCP56Time2a()
+		objSize = objSize + 7
+	}*/
 
-		//判断是否超过数据长度，超过则发送数据
-		if (asdu.ASDUSizeMax-asduTmp.IdentifierSize()-elementLength*yxNum) <= elementLength || k == (len(AppMap["yx"])-1) {
-			asduTmp.SetVariableNumber(yxNum)
-			err := asduTmp.SendICReply(c, asdu.InterrogatedByStation, asduPack.CommonAddr)
-			asduTmp.CleanInfoObj()
-			yxNum = 0
-			if err != nil {
-				log.Println("falied")
+	infolenth := getInfoCount(asduPack.Params, objSize, asduPack.Variable.IsSequence)
+	var k int = 0
+	if yxid == 1 {
+		var info []asdu.SinglePointInfo
+		for k, v := range AppMap["yx"] {
+			var spi asdu.SinglePointInfo
+			spi.Ioa = asdu.InfoObjAddr(k)
+			//spi.Time = t
+			spi.Value = YXMap[v] == 1
+			spi.Qds = 0x00
+			info = append(info, spi)
+		}
+
+		for range info {
+
+			if k+infolenth < len(info) {
+
+				err := asdu.Single(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.InterrogatedByStation}, asduPack.CommonAddr, info[k:k+infolenth]...)
+				if err != nil {
+					return err
+				}
 			} else {
-				log.Println("success")
+				err := asdu.Single(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.InterrogatedByStation}, asduPack.CommonAddr, info[k:]...)
+				if err != nil {
+					return err
+				}
 			}
+
+			k = k + infolenth
+		}
+	} else {
+		var info []asdu.DoublePointInfo
+		for k, v := range AppMap["yx"] {
+			var spi asdu.DoublePointInfo
+			spi.Ioa = asdu.InfoObjAddr(k)
+			//spi.Time = t
+			if YXMap[v] == 1 {
+				spi.Value = asdu.DPIDeterminedOn
+			} else {
+				spi.Value = asdu.DPIDeterminedOff
+			}
+			spi.Qds = 0x00
+			info = append(info, spi)
+		}
+
+		for range info {
+			if k+infolenth < len(info) {
+				err := asdu.Double(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.InterrogatedByStation}, asduPack.CommonAddr, info[k:k+infolenth]...)
+				if err != nil {
+					return err
+				}
+			} else {
+				err := asdu.Double(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.InterrogatedByStation}, asduPack.CommonAddr, info[k:]...)
+				if err != nil {
+					return err
+				}
+				break
+			}
+
+			k = k + infolenth
 		}
 	}
 
 	//遥测总召
-	asduYcTmp.Type = asdu.M_ME_NC_1
-	asduYcTmp.Variable.IsSequence = false
-	infoObjLength, _ = asdu.GetInfoObjSize(asdu.M_ME_NC_1)
-	elementLength = infoObjLength + asdu.ParamsWide.InfoObjAddrSize
-	for k, v := range AppMap["yc"] {
-		asduYcTmp.AppendInfoObjAddr(asdu.InfoObjAddr(YcAddress + k))
 
-		asduYcTmp.AppendFloat32(YCMap[v])
-		//品质信息设置默认值
-		asduYcTmp.AppendBytes(byte(0x3F))
+	var ycid int = 1
+	switch YCType {
+	case 1:
+	case 2:
+		ycid = 2
 
-		ycNum = ycNum + 1
-
-		//判断是否超过数据长度，超过则发送数据
-		if (asdu.ASDUSizeMax-asduYcTmp.IdentifierSize()-elementLength*ycNum) <= elementLength || k == (len(AppMap["yc"])-1) {
-			asduYcTmp.SetVariableNumber(ycNum)
-			err := asduYcTmp.SendICReply(c, asdu.InterrogatedByStation, asduPack.CommonAddr)
-			asduYcTmp.CleanInfoObj()
-			ycNum = 0
-			if err != nil {
-				log.Println("falied")
-			} else {
-				log.Println("success")
-			}
-		}
 	}
 
-	//数据发送完成
-	asduPack.SendReplyMirror(c, asdu.ActivationTerm)
+	if ycid == 1 {
+		infoObjSize, _ := asdu.GetInfoObjSize(asdu.M_ME_NC_1)
+		infoObjSize += asduPack.InfoObjAddrSize
+		ycinfolength := getInfoCount(asduPack.Params, infoObjSize, asduPack.Variable.IsSequence)
+		var ycinfo []asdu.MeasuredValueFloatInfo
+		for k, v := range AppMap["yc"] {
+			var spi asdu.MeasuredValueFloatInfo
+			spi.Ioa = asdu.InfoObjAddr(k) + YcAddress
+			//spi.Time = t
+			spi.Value = YCMap[v+YcAddress]
+			spi.Qds = 0x00
+			ycinfo = append(ycinfo, spi)
+		}
+		var k = 0
+		for range ycinfo {
+			if k+ycinfolength < len(ycinfo) {
+				err := asdu.MeasuredValueFloat(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.InterrogatedByStation}, asduPack.CommonAddr, ycinfo[k:k+ycinfolength]...)
+				if err != nil {
+					return err
+				}
+			} else {
+				err := asdu.MeasuredValueFloat(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.InterrogatedByStation}, asduPack.CommonAddr, ycinfo[k:]...)
+				if err != nil {
+					return err
+				}
+			}
+
+			k = k + ycinfolength
+		}
+
+	} else if ycid == 2 {
+
+		fmt.Println("归一化传输~~")
+	}
+	/*
+		//高路2024-9-17end
+		//*/
+
+	// go func() {
+	// 	for {
+	// 		err := asdu.Single(c, false, asdu.CauseOfTransmission{Cause: asdu.Spontaneous}, asdu.GlobalCommonAddr,
+	// 			asdu.SinglePointInfo{})
+	// 		if err != nil {
+	// 			log.Println("falied", err)
+	// 		} else {
+	// 			log.Println("success", err)
+	// 		}
+
+	// 		time.Sleep(time.Second * 1)
+	// 	}
+	// }()
+
+	//asduPack.SendICReply(c, asdu.InterrogatedByStation)
+	err := asduPack.SendReplyMirror(c, asdu.ActivationTerm)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func (sf *mysrv) CounterInterrogationHandler(asdu.Connect, *asdu.ASDU, asdu.QualifierCountCall) error {
@@ -109,10 +199,102 @@ func (sf *mysrv) CounterInterrogationHandler(asdu.Connect, *asdu.ASDU, asdu.Qual
 }
 func (sf *mysrv) ReadHandler(c asdu.Connect, asduPack *asdu.ASDU, addr asdu.InfoObjAddr) error {
 	fmt.Println("call ReadHandler()")
-	//发送单点数据
-	asduPack.Type = asdu.M_SP_NA_1
-	asduPack.AppendBytes(byte(YXMap[int(addr)]))
-	asduPack.SendICReply(c, asdu.Request, asduPack.CommonAddr)
+	///*高路2024-9-17start
+	objAddr := asduPack.DecodeInfoObjAddr()
+	/*var t time.Time
+	asduPack.Type = asdu.M_SP_TA_1
+	switch asduPack.Type {
+	case asdu.M_SP_NA_1:
+	case asdu.M_SP_TA_1:
+		t = asduPack.DecodeCP24Time2a()
+	case asdu.M_SP_TB_1:
+		t = asduPack.DecodeCP56Time2a()
+	}*/
+	if objAddr > YcAddress {
+		var spi asdu.MeasuredValueFloatInfo
+		spi.Ioa = objAddr
+		//spi.Time = t
+		spi.Value = YCMap[int(objAddr)]
+		spi.Qds = 0x00
+		switch asduPack.Type {
+		case asdu.M_ME_NC_1:
+			err := asdu.MeasuredValueFloat(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.Request}, asduPack.CommonAddr, spi)
+			if err != nil {
+				return err
+			}
+		case asdu.M_ME_TC_1:
+			err := asdu.MeasuredValueFloatCP24Time2a(c, asdu.CauseOfTransmission{Cause: asdu.Request}, asduPack.CommonAddr, spi)
+			if err != nil {
+				return err
+			}
+		case asdu.M_ME_TF_1:
+			err := asdu.MeasuredValueFloatCP56Time2a(c, asdu.CauseOfTransmission{Cause: asdu.Request}, asduPack.CommonAddr, spi)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		var yxid int = 1
+		switch YxType {
+		case 1:
+		case 2:
+			yxid = 2
+
+		}
+		if yxid == 1 { //单点
+			var spi asdu.SinglePointInfo
+			spi.Ioa = objAddr
+			//spi.Time = t
+			spi.Value = YXMap[int(objAddr)] == 1
+			spi.Qds = 0x00
+			switch asduPack.Type {
+			case asdu.M_SP_NA_1:
+				err := asdu.Single(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.Request}, asduPack.CommonAddr, spi)
+				if err != nil {
+					return err
+				}
+			case asdu.M_SP_TA_1:
+				err := asdu.SingleCP24Time2a(c, asdu.CauseOfTransmission{Cause: asdu.Request}, asduPack.CommonAddr, spi)
+				if err != nil {
+					return err
+				}
+			case asdu.M_SP_TB_1:
+				err := asdu.SingleCP56Time2a(c, asdu.CauseOfTransmission{Cause: asdu.Request}, asduPack.CommonAddr, spi)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			//双点遥信
+			var spi asdu.DoublePointInfo
+			spi.Ioa = objAddr
+			//spi.Time = t
+			if YXMap[int(objAddr)] == 1 {
+				spi.Value = asdu.DPIDeterminedOn
+			} else {
+				spi.Value = asdu.DPIDeterminedOff
+			}
+			spi.Qds = 0x00
+			switch asduPack.Type {
+			case asdu.M_DP_NA_1:
+				err := asdu.Double(c, asduPack.Variable.IsSequence, asdu.CauseOfTransmission{Cause: asdu.InterrogatedByStation}, asduPack.CommonAddr, spi)
+				if err != nil {
+					return err
+				}
+			case asdu.M_DP_TA_1:
+				err := asdu.DoubleCP24Time2a(c, asdu.CauseOfTransmission{Cause: asdu.Request}, asduPack.CommonAddr, spi)
+				if err != nil {
+					return err
+				}
+			case asdu.M_DP_TB_1:
+				err := asdu.DoubleCP56Time2a(c, asdu.CauseOfTransmission{Cause: asdu.Request}, asduPack.CommonAddr, spi)
+				if err != nil {
+					return err
+				}
+			}
+			/////////////////////////////
+		}
+	}
 
 	return nil
 }
@@ -132,8 +314,56 @@ func (sf *mysrv) DelayAcquisitionHandler(asdu.Connect, *asdu.ASDU, uint16) error
 	return nil
 }
 
-func (sf *mysrv) ASDUHandler(asdu.Connect, *asdu.ASDU) error {
-	//下发指令
+func (sf *mysrv) ASDUHandler(c asdu.Connect, asduPack *asdu.ASDU) error {
 	fmt.Println("call ASDUHandler()")
+	switch asduPack.Identifier.Type {
+	case asdu.C_SC_NA_1, asdu.C_SC_TA_1: //单命令遥控
+		if asduPack.Identifier.Coa.Cause == asdu.Activation {
+			singleCommandInfo := asduPack.GetSingleCmd()
+			// InSelect: true - selects, false - executes.
+			if singleCommandInfo.Qoc.InSelect {
+				return asduPack.SendReplyMirror(c, asdu.ActivationCon)
+			} else {
+				fmt.Println("调用遥控处理方法进行遥控操作，需要在执行完操作后发送一个激活终止的消息")
+				return asduPack.SendReplyMirror(c, asdu.ActivationCon)
+			}
+		} else if asduPack.Identifier.Coa.Cause == asdu.Deactivation {
+			fmt.Println("遥控中的撤销需要做什么操作")
+			return asduPack.SendReplyMirror(c, asdu.ActivationCon)
+
+		} else {
+			return asduPack.SendReplyMirror(c, asdu.UnknownCOT)
+		}
+	case asdu.C_DC_NA_1, asdu.C_DC_TA_1: //双命令遥控
+		if asduPack.Identifier.Coa.Cause == asdu.Activation {
+			doubleCommandInfo := asduPack.GetDoubleCmd()
+			// InSelect: true - selects, false - executes.
+			if doubleCommandInfo.Qoc.InSelect {
+				return asduPack.SendReplyMirror(c, asdu.ActivationCon)
+			} else {
+				fmt.Println("调用遥控处理方法进行遥控操作，需要在执行完操作后发送一个激活终止的消息")
+				return asduPack.SendReplyMirror(c, asdu.ActivationCon)
+			}
+		} else if asduPack.Identifier.Coa.Cause == asdu.Deactivation {
+			fmt.Println("遥控中的撤销需要做什么操作")
+			return asduPack.SendReplyMirror(c, asdu.ActivationCon)
+
+		} else {
+			return asduPack.SendReplyMirror(c, asdu.UnknownCOT)
+		}
+	}
 	return nil
+}
+
+func getInfoCount(param *asdu.Params, objSize int, isSequence bool) int {
+
+	var infoLen int = 0
+	if isSequence {
+		infoLen = (asdu.ASDUSizeMax - (param.IdentifierSize() + param.InfoObjAddrSize)) / objSize
+	} else {
+		infoLen = (asdu.ASDUSizeMax - param.IdentifierSize()) / objSize
+	}
+
+	return infoLen
+
 }

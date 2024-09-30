@@ -17,10 +17,15 @@ var YXMap = make(map[int]int)
 var YCTest [length]int
 var YXTest [length]int
 var AppMap = map[string][length]int{}
-
+var YxType int //1-单点，2-双点
+var YkType int //1-单点，2-双点
+var YCType int //1-短浮点  2 归一化
 const length = 1000
 
 func InitRandomData() {
+	YxType = 2
+	YCType = 1
+	YkType = 1
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < length; i++ {
 		YCMap[YcAddress+i] = rand.Float32() * 100
