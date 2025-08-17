@@ -153,7 +153,7 @@ func (s *Server) handle(request *Request) Framer {
 		exception = &IllegalFunction
 	}
 
-	if *exception == Success {
+	if *exception != Success {
 		response.SetException(exception)
 	}
 
