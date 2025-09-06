@@ -180,7 +180,7 @@ func (s *Server) Serve() {
 	}
 
 	for _, port := range s.ports {
-		s.wg.Add(1)
+		//s.wg.Add(1)
 		go func() {
 			defer s.wg.Done()
 			s.acceptSerialRequests(port)
